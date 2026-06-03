@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BA Usability Testing — Live Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#2563EB;--dark:#1E293B;--mid:#64748B;--border:#E2E8F0;
+  --bg:#F8F9FA;--white:#FFFFFF;
+  --gr-ac:#16A34A;--gr-bg:#F0FDF4;--gr-bd:#BBF7D0;
+  --am-ac:#D97706;--am-bg:#FFFBEB;--am-bd:#FDE68A;
+  --rd-ac:#DC2626;--rd-bg:#FFF1F2;--rd-bd:#FECACA;
+  --bl-bg:#EFF6FF;--bl-bd:#BFDBFE;
+  --gy-ac:#64748B;--gy-bg:#F1F5F9;--gy-bd:#CBD5E1;
+  --yl-ac:#CA8A04;--yl-bg:#FEFCE8;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--dark);min-height:100vh}
+.top-bar{height:4px;background:var(--accent)}
+.shell{max-width:1100px;margin:0 auto;padding:1.75rem 1.5rem 3rem}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.header-left h1{font-size:20px;font-weight:500;color:var(--dark)}
+.header-left p{font-size:13px;color:var(--mid);margin-top:3px}
+.rc-wrap{display:flex;align-items:center;gap:8px}
+.rc-wrap label{font-size:12px;color:var(--mid)}
+.rc-select{font-size:13px;font-weight:500;color:var(--accent);border:1.5px solid var(--accent);border-radius:6px;padding:5px 10px;background:var(--white);cursor:pointer}
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem}
+.tab{font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--mid);transition:all .2s}
+.tab.active{background:var(--accent);color:var(--white);border-color:var(--accent)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.rag-bar{border-radius:var(--radius);padding:12px 16px;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;border:1px solid;transition:all .3s}
+.rag-bar.red{background:var(--rd-bg);border-color:var(--rd-bd)}
+.rag-bar.amber{background:var(--am-bg);border-color:var(--am-bd)}
+.rag-bar.green{background:var(--gr-bg);border-color:var(--gr-bd)}
+.rag-bar.grey{background:var(--gy-bg);border-color:var(--gy-bd)}
+.rag-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rag-bar.red .rag-dot{background:var(--rd-ac)}
+.rag-bar.amber .rag-dot{background:var(--am-ac)}
+.rag-bar.green .rag-dot{background:var(--gr-ac)}
+.rag-bar.grey .rag-dot{background:var(--gy-ac)}
+.rag-text{font-size:13px;font-weight:600}
+.rag-bar.red .rag-text{color:#991B1B}
+.rag-bar.amber .rag-text{color:#92400E}
+.rag-bar.green .rag-text{color:#14532D}
+.rag-bar.grey .rag-text{color:var(--gy-ac)}
+.rag-sub{font-size:12px;color:var(--mid);margin-left:auto}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.25rem}
+@media(max-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}}
+.tile{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border)}
+.tile-accent{height:4px}
+.tile-body{padding:.9rem 1rem .8rem}
+.tile-num{font-size:28px;font-weight:500;line-height:1;margin-bottom:5px}
+.tile-label{font-size:11px;color:var(--mid)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem}
+@media(max-width:640px){.row2{grid-template-columns:1fr}}
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);padding:1.25rem}
+.card-title{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.9rem}
+.big-num{font-size:34px;font-weight:500;line-height:1;margin-bottom:4px}
+.big-sub{font-size:12px;color:var(--mid);margin-bottom:14px}
+.bar-track{background:var(--bg);border-radius:99px;height:8px;overflow:hidden;margin-bottom:6px}
+.bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.bar-scale{display:flex;justify-content:space-between}
+.bar-scale span{font-size:11px;color:var(--mid)}
+.bar-scale .pct{font-weight:600}
+.sev-list{display:flex;flex-direction:column;gap:9px}
+.sev-row{display:flex;align-items:center;gap:10px}
+.sev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sev-name{font-size:13px;color:var(--mid);flex:1}
+.sev-bar-track{width:80px;background:var(--bg);border-radius:99px;height:5px;overflow:hidden}
+.sev-bar-fill{height:100%;border-radius:99px;transition:width .6s}
+.sev-val{font-size:13px;font-weight:600;min-width:18px;text-align:right}
+.status-list{display:flex;flex-direction:column;gap:7px}
+.status-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg)}
+.status-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.status-name{font-size:13px;color:var(--mid);flex:1}
+.status-count{font-size:15px;font-weight:600}
+.status-pct{font-size:11px;color:var(--mid);min-width:36px;text-align:right}
+.calc-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+@media(max-width:500px){.calc-inputs{grid-template-columns:1fr}}
+.input-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem;text-align:center}
+.input-card.editable{border-color:var(--am-ac)}
+.input-label{font-size:11px;color:var(--mid);margin-bottom:8px}
+.input-val{font-size:28px;font-weight:500;color:var(--yl-ac);background:var(--yl-bg);border:1.5px solid var(--am-bd);border-radius:6px;width:100%;text-align:center;padding:4px 0}
+.input-val.auto{color:var(--accent);background:var(--bl-bg);border-color:var(--bl-bd)}
+.calc-rag{border-radius:var(--radius);padding:14px 18px;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;border:1px solid;font-size:13px;font-weight:600;transition:all .3s}
+.calc-bottom{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.calc-bottom{grid-template-columns:1fr}}
+.breakdown-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.breakdown-name{font-size:13px;color:var(--mid);flex:1}
+.breakdown-val{font-size:14px;font-weight:600}
+.guide-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:7px}
+.guide-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.guide-status{font-size:13px;font-weight:600;min-width:60px}
+.guide-desc{font-size:12px;color:var(--mid)}
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;color:var(--mid);font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:var(--rd-bg);border:1px solid var(--rd-bd);border-radius:var(--radius);padding:1.25rem 1.5rem;color:var(--rd-ac);font-size:13px;line-height:1.8}
+.error-box strong{display:block;margin-bottom:6px;font-size:14px}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;flex-wrap:wrap;gap:.5rem}
+.footer span{font-size:11px;color:var(--mid)}
+.refresh-btn{font-size:12px;font-weight:500;color:var(--accent);background:var(--bl-bg);border:1px solid var(--bl-bd);border-radius:6px;padding:5px 12px;cursor:pointer}
+.refresh-btn:hover{background:#DBEAFE}
+.bottom-bar{height:4px;background:var(--accent);border-radius:2px;margin-top:2rem}
+.tiles-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+</style>
+</head>
+<body>
+<div class="top-bar"></div>
+<div class="shell">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Meritsoft EasyFocus — BA Usability Testing</h1>
+      <p id="dash-sub">Loading live data...</p>
+    </div>
+    <div class="rc-wrap">
+      <label for="rc-select">Release Cycle</label>
+      <select class="rc-select" id="rc-select" onchange="applyFilter()">
+        <option value="all">All Cycles</option>
+        <option value="RC1">RC1</option>
+        <option value="RC2">RC2</option>
+        <option value="RC3">RC3</option>
+        <option value="RC4">RC4</option>
+        <option value="RC5">RC5</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <span>Reading live data from SharePoint...</span>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error-box" style="display:none">
+    <strong>⚠️ Could not load data</strong>
+    <span id="error-msg"></span>
+  </div>
+
+  <!-- Content -->
+  <div id="main-content" style="display:none">
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('status')">📊 PO Status View</div>
+      <div class="tab" onclick="switchTab('calc')">🧮 Progress Calculator</div>
+    </div>
+
+    <!-- TAB 1: PO Status View -->
+    <div class="tab-panel active" id="tab-status">
+      <div class="rag-bar amber" id="rag-bar">
+        <div class="rag-dot"></div>
+        <span class="rag-text" id="rag-text">Loading...</span>
+        <span class="rag-sub" id="rag-sub"></span>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="tile-accent" style="background:var(--accent)"></div><div class="tile-body"><div class="tile-num" style="color:var(--accent)" id="t-total">—</div><div class="tile-label">Total test cases</div></div></div>
+        <div class="tile"><div class="tile-accent" style="background:var(--gr-ac)"></div><div class="tile-body"><div class="tile-num" style="color:var(--gr-ac)" id="t-pass">—</div><div class="tile-label">Passed</div></div></div>
+        <div class="tile"><div class="tile-accent" style="background:var(--rd-ac)"></div><div class="tile-body"><div class="tile-num" style="color:var(--rd-ac)" id="t-fail">—</div><div class="tile-label">Failed</div></div></div>
+        <div class="tile"><div class="tile-accent" style="background:var(--gy-ac)"></div><div class="tile-body"><div class="tile-num" style="color:var(--gy-ac)" id="t-block">—</div><div class="tile-label">Blocked</div></div></div>
+        <div class="tile"><div class="tile-accent" style="background:var(--am-ac)"></div><div class="tile-body"><div class="tile-num" style="color:var(--am-ac)" id="t-nt">—</div><div class="tile-label">Not tested yet</div></div></div>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="card-title">Pass Rate</div>
+          <div class="big-num" style="color:var(--gr-ac)" id="c-pass-pct">—</div>
+          <div class="big-sub" id="c-pass-sub">— of — test cases passed</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-pass" style="background:var(--gr-ac);width:0%"></div></div>
+          <div class="bar-scale"><span>0%</span><span class="pct" style="color:var(--gr-ac)" id="bar-pass-lbl">0%</span><span>100%</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Execution Progress</div>
+          <div class="big-num" style="color:var(--accent)" id="c-exec-pct">—</div>
+          <div class="big-sub" id="c-exec-sub">— of — cases executed</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-exec" style="background:var(--accent);width:0%"></div></div>
+          <div class="bar-scale"><span>0%</span><span class="pct" style="color:var(--accent)" id="bar-exec-lbl">0%</span><span>100%</span></div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="card">
+          <div class="card-title">Failed — By Severity</div>
+          <div class="sev-list">
+            <div class="sev-row"><div class="sev-dot" style="background:var(--rd-ac)"></div><span class="sev-name">Critical</span><div class="sev-bar-track"><div class="sev-bar-fill" id="sev-bar-crit" style="background:var(--rd-ac);width:0%"></div></div><span class="sev-val" style="color:var(--rd-ac)" id="sev-crit">0</span></div>
+            <div class="sev-row"><div class="sev-dot" style="background:var(--am-ac)"></div><span class="sev-name">High</span><div class="sev-bar-track"><div class="sev-bar-fill" id="sev-bar-high" style="background:var(--am-ac);width:0%"></div></div><span class="sev-val" style="color:var(--am-ac)" id="sev-high">0</span></div>
+            <div class="sev-row"><div class="sev-dot" style="background:var(--yl-ac)"></div><span class="sev-name">Medium</span><div class="sev-bar-track"><div class="sev-bar-fill" id="sev-bar-med" style="background:var(--yl-ac);width:0%"></div></div><span class="sev-val" style="color:var(--yl-ac)" id="sev-med">0</span></div>
+            <div class="sev-row"><div class="sev-dot" style="background:var(--gr-ac)"></div><span class="sev-name">Low</span><div class="sev-bar-track"><div class="sev-bar-fill" id="sev-bar-low" style="background:var(--gr-ac);width:0%"></div></div><span class="sev-val" style="color:var(--gr-ac)" id="sev-low">0</span></div>
+            <div class="sev-row"><div class="sev-dot" style="background:var(--gy-ac)"></div><span class="sev-name">Not set</span><div class="sev-bar-track"><div class="sev-bar-fill" id="sev-bar-ns" style="background:var(--gy-ac);width:0%"></div></div><span class="sev-val" style="color:var(--gy-ac)" id="sev-ns">0</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Status Breakdown</div>
+          <div class="status-list">
+            <div class="status-row"><div class="status-icon" style="background:var(--gr-bg)">✅</div><span class="status-name">Passed</span><span class="status-count" style="color:var(--gr-ac)" id="sb-pass">—</span><span class="status-pct" id="sb-pass-pct">—</span></div>
+            <div class="status-row"><div class="status-icon" style="background:var(--rd-bg)">❌</div><span class="status-name">Failed</span><span class="status-count" style="color:var(--rd-ac)" id="sb-fail">—</span><span class="status-pct" id="sb-fail-pct">—</span></div>
+            <div class="status-row"><div class="status-icon" style="background:var(--gy-bg)">🚫</div><span class="status-name">Blocked</span><span class="status-count" style="color:var(--gy-ac)" id="sb-block">—</span><span class="status-pct" id="sb-block-pct">—</span></div>
+            <div class="status-row"><div class="status-icon" style="background:var(--am-bg)">⏳</div><span class="status-name">Not tested yet</span><span class="status-count" style="color:var(--am-ac)" id="sb-nt">—</span><span class="status-pct" id="sb-nt-pct">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Progress Calculator -->
+    <div class="tab-panel" id="tab-calc">
+      <div class="calc-inputs">
+        <div class="input-card"><div class="input-label">Total test cases in file</div><input class="input-val auto" id="calc-total" readonly value="—"></div>
+        <div class="input-card editable"><div class="input-label">Target to complete</div><input class="input-val" id="calc-target" type="number" min="0" value="30" oninput="updateCalc()"></div>
+        <div class="input-card editable"><div class="input-label">Completed so far</div><input class="input-val" id="calc-completed" type="number" min="0" value="0" oninput="updateCalc()"></div>
+      </div>
+      <div class="calc-rag" id="calc-rag" style="background:var(--am-bg);border-color:var(--am-bd)">
+        <div class="rag-dot" id="calc-rag-dot" style="background:var(--am-ac)"></div>
+        <span id="calc-rag-text" style="color:var(--am-ac)">Enter your target above</span>
+      </div>
+      <div class="tiles-3">
+        <div class="tile"><div class="tile-accent" style="background:var(--am-ac)"></div><div class="tile-body"><div class="tile-num" style="color:var(--am-ac)" id="calc-remaining">—</div><div class="tile-label">Remaining</div></div></div>
+        <div class="tile"><div class="tile-accent" style="background:var(--accent)"></div><div class="tile-body"><div class="tile-num" style="color:var(--accent)" id="calc-pct">—</div><div class="tile-label">% of target done</div></div></div>
+        <div class="tile"><div class="tile-accent" style="background:var(--gy-ac)"></div><div class="tile-body"><div class="tile-num" style="color:var(--gy-ac)" id="calc-nt">—</div><div class="tile-label">Not tested in file</div></div></div>
+      </div>
+      <div class="calc-bottom">
+        <div class="card">
+          <div class="card-title">Progress Breakdown</div>
+          <div class="breakdown-row"><div class="breakdown-dot" style="background:var(--accent)"></div><span class="breakdown-name">Total in file</span><span class="breakdown-val" style="color:var(--accent)" id="bd-total">—</span></div>
+          <div class="breakdown-row"><div class="breakdown-dot" style="background:var(--am-ac)"></div><span class="breakdown-name">Target to complete</span><span class="breakdown-val" style="color:var(--am-ac)" id="bd-target">—</span></div>
+          <div class="breakdown-row"><div class="breakdown-dot" style="background:var(--gr-ac)"></div><span class="breakdown-name">Completed so far</span><span class="breakdown-val" style="color:var(--gr-ac)" id="bd-completed">—</span></div>
+          <div class="breakdown-row"><div class="breakdown-dot" style="background:var(--am-ac)"></div><span class="breakdown-name">Remaining</span><span class="breakdown-val" style="color:var(--am-ac)" id="bd-remaining">—</span></div>
+          <div class="breakdown-row"><div class="breakdown-dot" style="background:var(--gr-ac)"></div><span class="breakdown-name">% complete</span><span class="breakdown-val" style="color:var(--gr-ac)" id="bd-pct">—</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">RAG Guide</div>
+          <div class="guide-row" style="background:var(--gr-bg)"><div class="guide-dot" style="background:var(--gr-ac)"></div><span class="guide-status" style="color:var(--gr-ac)">GREEN</span><span class="guide-desc">Target achieved or 75%+ done</span></div>
+          <div class="guide-row" style="background:var(--am-bg)"><div class="guide-dot" style="background:var(--am-ac)"></div><span class="guide-status" style="color:var(--am-ac)">AMBER</span><span class="guide-desc">In progress, below 75% of target</span></div>
+          <div class="guide-row" style="background:var(--rd-bg)"><div class="guide-dot" style="background:var(--rd-ac)"></div><span class="guide-status" style="color:var(--rd-ac)">RED</span><span class="guide-desc">Not started — 0 completed</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="last-updated">Last updated: —</span>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+  <div class="bottom-bar"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  SharePoint share link — auto-converted to
+//  Microsoft Graph API download URL
+// ═══════════════════════════════════════════
+const SHARE_LINK = "https://cognizantonlinegbr.sharepoint.com/:x:/s/MeritEuroclearProgramCognizant/IQCdu7digjZJQqTrU6pZbhdJATZ2OQeUjoHosc0WKyfgWHs?e=R2boCT&download=1";
+const REFRESH_MS = 60000;
+
+let allRows = [];
+
+async function loadData() {
+  showLoader(true); hideError();
+  try {
+    // Route through CORS proxy to bypass browser CORS restriction
+    const PROXY = "https://corsproxy.io/?url=";
+    const resp = await fetch(PROXY + encodeURIComponent(SHARE_LINK));
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
+
+    const arrayBuffer = await resp.arrayBuffer();
+
+    // Parse XLSX using SheetJS (loaded from CDN below)
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+    // Get Test Cases sheet
+    const sheetName = workbook.SheetNames.find(n => n.includes('Test Cases'));
+    if (!sheetName) throw new Error('Could not find "Test Cases" sheet in the Excel file.');
+
+    const ws = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    if (rows.length < 2) throw new Error('No data found in Test Cases sheet.');
+
+    // Parse rows — headers in row 0
+    // Col F=5=Pass/Fail, Col I=8=Severity, Col N=13=RC
+    allRows = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row[0]) continue;
+      allRows.push({
+        tc:       String(row[0]  || ''),
+        pf:       String(row[5]  || '').trim(),
+        severity: String(row[8]  || '').trim(),
+        rc:       String(row[13] || 'RC1').trim()
+      });
+    }
+
+    document.getElementById('dash-sub').textContent =
+      'Live data from SharePoint  •  ' + allRows.length + ' test cases loaded';
+
+    applyFilter();
+    showLoader(false);
+    document.getElementById('last-updated').textContent =
+      'Last updated: ' + new Date().toLocaleString('en-GB',
+        {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  } catch(err) {
+    showLoader(false);
+    showError(err.message);
+    console.error(err);
+  }
+}
+
+function applyFilter() {
+  const rc = document.getElementById('rc-select').value;
+  const rows = rc === 'all' ? allRows : allRows.filter(r => r.rc === rc);
+
+  const total    = rows.length;
+  const pass     = rows.filter(r => r.pf === 'Pass').length;
+  const fail     = rows.filter(r => r.pf === 'Fail').length;
+  const block    = rows.filter(r => r.pf === 'Blocked').length;
+  const nt       = rows.filter(r => r.pf === 'Not Tested').length;
+  const executed = total - nt;
+
+  const passPct  = total > 0 ? Math.round(pass     / total * 100) : 0;
+  const execPct  = total > 0 ? Math.round(executed / total * 100) : 0;
+  const failPct  = total > 0 ? Math.round(fail     / total * 100) : 0;
+  const blockPct = total > 0 ? Math.round(block    / total * 100) : 0;
+  const ntPct    = total > 0 ? Math.round(nt       / total * 100) : 0;
+
+  const sevCrit = rows.filter(r => r.pf==='Fail' && r.severity==='Critical').length;
+  const sevHigh = rows.filter(r => r.pf==='Fail' && r.severity==='High').length;
+  const sevMed  = rows.filter(r => r.pf==='Fail' && r.severity==='Medium').length;
+  const sevLow  = rows.filter(r => r.pf==='Fail' && r.severity==='Low').length;
+  const sevNs   = Math.max(fail - sevCrit - sevHigh - sevMed - sevLow, 0);
+  const sevMax  = Math.max(sevCrit, sevHigh, sevMed, sevLow, sevNs, 1);
+
+  // RAG
+  let ragClass, ragText;
+  if (total === 0)      { ragClass='grey';  ragText='⚪  No data loaded'; }
+  else if (nt === total){ ragClass='red';   ragText='🔴  RED — Testing has not started yet'; }
+  else if (nt === 0)    { ragClass='green'; ragText='🟢  GREEN — All test cases executed. Ready for PO sign-off.'; }
+  else                  { ragClass='amber'; ragText='🟠  AMBER — Testing is in progress'; }
+
+  const bar = document.getElementById('rag-bar');
+  bar.className = 'rag-bar ' + ragClass;
+  set('rag-text', ragText);
+  set('rag-sub', `${total} total  •  ${rc === 'all' ? 'All Cycles' : rc}`);
+
+  set('t-total', total); set('t-pass', pass);
+  set('t-fail', fail);   set('t-block', block); set('t-nt', nt);
+
+  set('c-pass-pct', passPct + '%');
+  set('c-pass-sub', `${pass} of ${total} test cases passed`);
+  document.getElementById('bar-pass').style.width = passPct + '%';
+  set('bar-pass-lbl', passPct + '%');
+
+  set('c-exec-pct', execPct + '%');
+  set('c-exec-sub', `${executed} of ${total} cases executed`);
+  document.getElementById('bar-exec').style.width = execPct + '%';
+  set('bar-exec-lbl', execPct + '%');
+
+  setSev('crit', sevCrit, sevMax); setSev('high', sevHigh, sevMax);
+  setSev('med',  sevMed,  sevMax); setSev('low',  sevLow,  sevMax);
+  setSev('ns',   sevNs,   sevMax);
+
+  set('sb-pass',  pass);  set('sb-pass-pct',  passPct  + '%');
+  set('sb-fail',  fail);  set('sb-fail-pct',  failPct  + '%');
+  set('sb-block', block); set('sb-block-pct', blockPct + '%');
+  set('sb-nt',    nt);    set('sb-nt-pct',    ntPct    + '%');
+
+  // Calculator auto-fill
+  document.getElementById('calc-total').value = total;
+  document.getElementById('calc-nt').textContent = nt;
+  set('bd-total', total);
+  updateCalc();
+}
+
+function setSev(id, val, max) {
+  set('sev-' + id, val);
+  document.getElementById('sev-bar-' + id).style.width =
+    max > 0 ? Math.round(val / max * 100) + '%' : '0%';
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function updateCalc() {
+  const total     = parseInt(document.getElementById('calc-total').value)     || 0;
+  const target    = parseInt(document.getElementById('calc-target').value)    || 0;
+  const completed = parseInt(document.getElementById('calc-completed').value) || 0;
+  const nt        = parseInt(document.getElementById('calc-nt').textContent)  || 0;
+  const remaining = Math.max(target - completed, 0);
+  const pct       = target > 0 ? Math.round(completed / target * 100) : 0;
+
+  set('calc-remaining', remaining);
+  set('calc-pct', pct + '%');
+  set('bd-total', total); set('bd-target', target);
+  set('bd-completed', completed); set('bd-remaining', remaining);
+  set('bd-pct', pct + '%');
+
+  const rag = document.getElementById('calc-rag');
+  const txt = document.getElementById('calc-rag-text');
+  const dot = document.getElementById('calc-rag-dot');
+  let cls, color, bg, bd, msg;
+  if (completed === 0)       { cls='red';   color='var(--rd-ac)'; bg='var(--rd-bg)'; bd='var(--rd-bd)'; msg=`🔴  RED — Not started. 0 out of ${target} completed.`; }
+  else if (completed>=target){ cls='green'; color='var(--gr-ac)'; bg='var(--gr-bg)'; bd='var(--gr-bd)'; msg=`🟢  GREEN — Target achieved! ${completed} of ${target} done.`; }
+  else if (pct >= 75)        { cls='green'; color='var(--gr-ac)'; bg='var(--gr-bg)'; bd='var(--gr-bd)'; msg=`🟢  GREEN — ${completed} of ${target} done. Nearly there!`; }
+  else                       { cls='amber'; color='var(--am-ac)'; bg='var(--am-bg)'; bd='var(--am-bd)'; msg=`🟠  AMBER — ${completed} of ${target} done. Keep going.`; }
+  rag.style.background=bg; rag.style.borderColor=bd;
+  txt.style.color=color; txt.textContent=msg;
+  dot.style.background=color;
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['status','calc'][i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
+}
+
+function showLoader(show) {
+  document.getElementById('loader').style.display = show ? 'flex' : 'none';
+  document.getElementById('main-content').style.display = show ? 'none' : 'block';
+}
+function showError(msg) {
+  const eb = document.getElementById('error-box');
+  eb.style.display = 'block';
+  document.getElementById('error-msg').innerHTML = `<br><br><b>Error:</b> ${msg}<br><br>
+    <b>What to do:</b><br>
+    • Make sure the Excel file is still shared as "Anyone with the link can view"<br>
+    • Check the share link has not expired<br>
+    • Try refreshing the page`;
+  document.getElementById('main-content').style.display = 'none';
+}
+function hideError() { document.getElementById('error-box').style.display='none'; }
+
+// Load SheetJS then fetch data
+const s = document.createElement('script');
+s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+s.onload = () => { loadData(); setInterval(loadData, REFRESH_MS); };
+s.onerror = () => showError('Could not load required library. Check your internet connection.');
+document.head.appendChild(s);
+</script>
+</body>
+</html>
